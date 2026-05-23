@@ -1,0 +1,2171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Kaner Healthcare — MR App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<!-- Google Identity Services + Drive API -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+<style>
+  :root {
+    --teal:     #0d7377;
+    --teal-dk:  #095d61;
+    --teal-lt:  #e6f4f5;
+    --teal-mid: #14a3a8;
+    --emerald:  #059669;
+    --orange:   #ea580c;
+    --blue:     #2563eb;
+    --slate-9:  #0f172a;
+    --slate-7:  #334155;
+    --slate-5:  #64748b;
+    --slate-3:  #cbd5e1;
+    --slate-1:  #f1f5f9;
+    --white:    #ffffff;
+    --red:      #dc2626;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+    --r-xl: 18px;
+    --r-lg: 14px;
+    --r-md: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #eef2f7;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  #app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── LOGIN VIEW ── */
+  .login-view {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, var(--teal-dk) 0%, var(--teal) 60%, var(--teal-mid) 100%);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    padding: 24px; z-index: 500;
+  }
+  .login-card {
+    background: var(--white); width: 100%; padding: 32px 24px;
+    border-radius: var(--r-xl); box-shadow: 0 20px 40px rgba(0,0,0,.2);
+    animation: fadeUp .4s ease both;
+  }
+  .login-logo {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    color: var(--teal-dk); font-size: 18px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  
+  /* ── HEADER HERO ── */
+  .hero {
+    background: linear-gradient(135deg, var(--teal-dk) 0%, var(--teal) 60%, var(--teal-mid) 100%);
+    padding: 52px 20px 28px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .hero::before {
+    content: ''; position: absolute; width: 220px; height: 220px;
+    background: rgba(255,255,255,.06); border-radius: 50%; top: -60px; right: -60px;
+  }
+  .hero::after {
+    content: ''; position: absolute; width: 120px; height: 120px;
+    background: rgba(255,255,255,.04); border-radius: 50%; bottom: -30px; left: -30px;
+  }
+  .hero-brand {
+    display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,.75);
+    font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 12px;
+  }
+  .hero-brand svg { opacity: .8; }
+  .hero-greeting { color: #fff; font-size: 24px; font-weight: 800; line-height: 1.2; }
+  .hero-date { color: rgba(255,255,255,.65); font-size: 12px; margin-top: 4px; font-weight: 500; }
+
+  /* ── SCROLL CONTENT ── */
+  .page-content {
+    flex: 1; overflow-y: auto; padding: 20px 16px 90px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── STATS GRID ── */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--white); border: 1px solid #e8edf5; border-radius: var(--r-xl);
+    padding: 16px 14px; display: flex; flex-direction: column; align-items: center; text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 10px;
+  }
+  .stat-value { font-size: 28px; font-weight: 800; color: var(--slate-9); line-height: 1; }
+  .stat-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--slate-5); margin-top: 5px; }
+  .stat-sub { font-size: 11px; color: var(--slate-5); margin-top: 6px; font-weight: 500; }
+
+  /* ── SECTION HEADERS ── */
+  .section-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .section-title { font-size: 16px; font-weight: 800; color: var(--slate-9); }
+  .section-link { font-size: 12px; font-weight: 700; color: var(--teal); border: none; background: none; cursor: pointer; padding: 0; }
+
+  /* ── REPORT CARDS ── */
+  .report-card {
+    background: var(--white); border: 1px solid #e8edf5; border-radius: var(--r-xl);
+    padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+    box-shadow: var(--shadow-sm); margin-bottom: 10px; transition: transform .15s;
+  }
+  .report-card:active { transform: scale(.98); }
+  .report-card-left { display: flex; align-items: center; gap: 12px; }
+  .entity-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .entity-icon.doctor { background: #eff6ff; color: var(--blue); }
+  .entity-icon.chemist { background: #fff7ed; color: var(--orange); }
+  .entity-name { font-weight: 700; color: var(--slate-9); font-size: 14px; }
+  .entity-type { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--slate-5); }
+  .order-value { font-size: 14px; font-weight: 800; color: var(--emerald); font-family: 'DM Mono', monospace; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    background: var(--slate-1); border: 2px dashed var(--slate-3); border-radius: var(--r-xl);
+    padding: 40px 20px; text-align: center;
+  }
+  .empty-icon { width: 52px; height: 52px; color: var(--slate-3); margin: 0 auto 12px; }
+  .empty-text { font-size: 14px; font-weight: 600; color: var(--slate-5); }
+
+  /* ── NETWORK LIST ── */
+  .network-card {
+    background: var(--white); border: 1px solid #e8edf5; border-radius: var(--r-xl);
+    padding: 14px 16px 14px 20px; position: relative; overflow: hidden; margin-bottom: 10px; box-shadow: var(--shadow-sm);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .network-card.clickable { cursor: pointer; }
+  .network-card.clickable:active { transform: scale(.98); box-shadow: var(--shadow-sm); }
+  .network-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+  .network-card.doctor::before { background: var(--blue); }
+  .network-card.chemist::before { background: var(--orange); }
+  .network-name { font-size: 15px; font-weight: 700; color: var(--slate-9); }
+  .network-sub { font-size: 11px; font-weight: 600; color: var(--blue); margin-top: 2px; }
+  .network-sub.chemist-sub { color: var(--orange); }
+  .network-meta { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--slate-5); margin-top: 8px; }
+
+  /* ── TOGGLE & TABS ── */
+  .tab-toggle {
+    background: #eef2f7; border-radius: var(--r-lg); padding: 4px; display: flex; margin-bottom: 16px;
+  }
+  .tab-toggle button {
+    flex: 1; padding: 9px; border: none; background: none; border-radius: 10px;
+    font-size: 13px; font-weight: 700; color: var(--slate-5); cursor: pointer; transition: all .2s; font-family: inherit;
+  }
+  .tab-toggle button.active { background: var(--white); color: var(--teal); box-shadow: var(--shadow-sm); }
+
+  /* ── SEARCH ── */
+  .search-wrap { position: relative; margin-bottom: 16px; }
+  .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--slate-5); }
+  .search-input {
+    width: 100%; padding: 11px 14px 11px 40px; background: var(--white);
+    border: 1px solid #e0e7ef; border-radius: var(--r-lg); font-size: 13px; font-family: inherit; color: var(--slate-9);
+    outline: none; transition: border-color .2s, box-shadow .2s; box-shadow: var(--shadow-sm);
+  }
+  .search-input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13,115,119,.12); }
+
+  /* ── FORMS ── */
+  .form-card {
+    background: var(--white); border: 1px solid #e8edf5; border-radius: var(--r-xl);
+    padding: 20px; box-shadow: var(--shadow-sm); margin-bottom: 12px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--slate-7); margin-bottom: 6px; letter-spacing: .04em; }
+  .form-control {
+    width: 100%; padding: 12px 14px; background: var(--slate-1);
+    border: 1px solid #dde3ed; border-radius: var(--r-md);
+    font-size: 13px; font-family: inherit; color: var(--slate-9);
+    outline: none; transition: border-color .2s, box-shadow .2s;
+  }
+  .form-control:focus { background: #fff; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13,115,119,.1); }
+  .form-control::placeholder { color: var(--slate-5); }
+  select.form-control { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; padding-right: 36px; }
+  textarea.form-control { resize: vertical; min-height: 80px; }
+
+  /* Dynamic Sample Rows */
+  .sample-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .sample-row select { flex: 1; }
+  .sample-row input { width: 70px; text-align: center; }
+
+  /* ── CHIPS ── */
+  .chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    border: 1.5px solid #dde3ed; background: var(--slate-1); color: var(--slate-7);
+    cursor: pointer; transition: all .15s; font-family: inherit;
+  }
+  .chip.selected { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    width: 100%; padding: 15px; background: var(--teal); color: #fff;
+    border: none; border-radius: var(--r-lg); font-size: 15px; font-weight: 800; font-family: inherit;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(13,115,119,.35); transition: background .2s, transform .1s, box-shadow .2s;
+    margin-top: 8px; letter-spacing: .01em;
+  }
+  .btn-primary:active { transform: scale(.98); box-shadow: none; background: var(--teal-dk); }
+  .btn-icon {
+    display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px;
+    border-radius: 999px; font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; border: none; transition: all .15s;
+    text-decoration: none;
+  }
+  .btn-icon.teal { background: var(--teal-lt); color: var(--teal-dk); }
+  .btn-icon.teal:hover { background: #c5e3e4; }
+  .btn-icon.slate { background: var(--slate-1); color: var(--slate-7); }
+  .btn-icon.slate:hover { background: var(--slate-3); }
+  .btn-icon.red { background: #fef2f2; color: var(--red); border: 1px solid #fca5a5; }
+
+  /* ── PAGE HEADER ── */
+  .page-hdr { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .back-btn {
+    width: 38px; height: 38px; background: var(--white); border: 1px solid #e0e7ef;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: var(--shadow-sm); flex-shrink: 0;
+  }
+  .page-title { font-size: 20px; font-weight: 800; color: var(--slate-9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ── DCR REPORT FULL CARD ── */
+  .dcr-card {
+    background: var(--white); border: 1px solid #e8edf5; border-radius: var(--r-xl);
+    padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-sm); position: relative;
+  }
+  .dcr-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .dcr-badge {
+    padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .dcr-badge.doctor { background: #eff6ff; color: var(--blue); }
+  .dcr-badge.chemist { background: #fff7ed; color: var(--orange); }
+  .dcr-date { font-size: 11px; color: var(--slate-5); font-family: 'DM Mono', monospace; }
+  .dcr-name { font-size: 15px; font-weight: 800; color: var(--slate-9); margin-bottom: 2px; }
+  .dcr-detail-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--slate-7); margin-top: 8px; }
+  .dcr-detail-label { font-weight: 700; color: var(--slate-5); min-width: 80px; }
+  .dcr-order { font-family: 'DM Mono', monospace; font-size: 14px; color: var(--emerald); font-weight: 700; }
+
+  /* Pill tags */
+  .pill-tag {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
+    background: var(--teal-lt); color: var(--teal-dk); border-radius: 999px; font-size: 11px; font-weight: 600; margin: 2px;
+  }
+
+  /* Sample Tracking List Item */
+  .sample-tracker-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid var(--slate-1);
+  }
+  .sample-tracker-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .sample-brand { font-size: 14px; font-weight: 700; color: var(--slate-9); }
+  .sample-qty { font-size: 14px; font-weight: 800; color: var(--teal); font-family: 'DM Mono', monospace; background: var(--teal-lt); padding: 4px 10px; border-radius: 8px; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px;
+    background: rgba(255,255,255,.95); backdrop-filter: blur(12px); border-top: 1px solid #e8edf5;
+    display: flex; z-index: 100; padding: 8px 0 env(safe-area-inset-bottom);
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0;
+    color: var(--slate-5); cursor: pointer; border: none; background: none; font-family: inherit; transition: color .2s;
+  }
+  .nav-item.active { color: var(--teal); }
+  .nav-item svg { transition: transform .2s; }
+  .nav-item.active svg { transform: translateY(-2px); }
+  .nav-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; }
+  .nav-add {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0 0 6px;
+    cursor: pointer; border: none; background: none; font-family: inherit; position: relative;
+  }
+  .nav-add-circle {
+    width: 52px; height: 52px; background: linear-gradient(135deg, var(--teal-mid), var(--teal));
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff;
+    box-shadow: 0 4px 14px rgba(13,115,119,.4); margin-top: -20px; transition: transform .15s;
+  }
+  .nav-add:active .nav-add-circle { transform: scale(.93); }
+  .nav-add-label { font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: .06em; margin-top: 2px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    max-width: 360px; width: calc(100% - 32px); padding: 14px 18px; border-radius: var(--r-lg);
+    display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; z-index: 999;
+    box-shadow: 0 8px 24px rgba(0,0,0,.15); animation: toastIn .3s ease;
+  }
+  .toast.success { background: #064e3b; color: #6ee7b7; }
+  .toast.error { background: #7f1d1d; color: #fca5a5; }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  /* ── ADD REPORT ── */
+  .visit-type-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .visit-type-btn {
+    padding: 14px; border-radius: var(--r-lg); border: 2px solid #e0e7ef; background: var(--slate-1);
+    text-align: center; cursor: pointer; transition: all .2s; font-family: inherit;
+  }
+  .visit-type-btn.selected { border-color: var(--teal); background: var(--teal-lt); }
+  .visit-type-icon { width: 36px; height: 36px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; }
+  .visit-type-btn.doctor .visit-type-icon { background: #dbeafe; color: var(--blue); }
+  .visit-type-btn.chemist .visit-type-icon { background: #fed7aa; color: var(--orange); }
+  .visit-type-label { font-size: 13px; font-weight: 700; color: var(--slate-7); }
+
+  /* Admin Badges */
+  .creator-badge {
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+    background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 999px;
+    font-size: 10px; font-weight: 700; color: var(--slate-5); margin-top: 6px;
+  }
+
+  /* ── GEO TAG ── */
+  .geo-status-bar {
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+    border-radius: var(--r-md); font-size: 12px; font-weight: 600; margin-bottom: 16px;
+  }
+  .geo-status-bar.acquiring { background: #fefce8; color: #854d0e; border: 1px solid #fde68a; }
+  .geo-status-bar.success   { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+  .geo-status-bar.error     { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  .geo-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .geo-dot.pulse { background: #eab308; animation: geoPulse 1.2s infinite; }
+  .geo-dot.green { background: #22c55e; }
+  .geo-dot.red   { background: #ef4444; }
+  @keyframes geoPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .geo-admin-row {
+    display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--slate-5);
+    margin-top: 6px; flex-wrap: wrap;
+  }
+  .geo-map-link {
+    display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700;
+    color: var(--teal-dk); background: var(--teal-lt); padding: 2px 8px; border-radius: 999px;
+    text-decoration: none; border: none; cursor: pointer;
+  }
+  .geo-map-link:hover { background: #c5e3e4; }
+
+  /* ── SYNC OVERLAY ── */
+  .sync-overlay {
+    position: fixed; inset: 0; background: rgba(9,93,97,.92); z-index: 2000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; gap: 16px; padding: 32px;
+  }
+  .sync-spinner {
+    width: 48px; height: 48px; border: 4px solid rgba(255,255,255,.2);
+    border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sync-msg { font-size: 15px; font-weight: 700; text-align: center; line-height: 1.5; }
+  .sync-sub { font-size: 12px; color: rgba(255,255,255,.65); text-align: center; }
+
+  /* Drive status pill in hero */
+  .drive-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; margin-top: 8px; cursor: pointer;
+  }
+  .drive-pill.synced   { background: rgba(255,255,255,.15); color: rgba(255,255,255,.9); }
+  .drive-pill.syncing  { background: rgba(255,255,255,.1);  color: rgba(255,255,255,.7); }
+  .drive-pill.offline  { background: rgba(234,88,12,.3);    color: #fed7aa; }
+  .drive-pill.noauth   { background: rgba(255,255,255,.12); color: rgba(255,255,255,.8); }
+  .drive-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .drive-dot.green  { background: #4ade80; }
+  .drive-dot.yellow { background: #fbbf24; animation: geoPulse 1s infinite; }
+  .drive-dot.red    { background: #f87171; }
+  .drive-dot.grey   { background: rgba(255,255,255,.4); }
+
+  /* ── TRANSITIONS ── */
+  .view { animation: fadeUp .25s ease both; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SCROLLBAR ── */
+  .page-content::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- SYNC OVERLAY -->
+  <div id="syncOverlay" class="sync-overlay" style="display:none">
+    <div class="sync-spinner"></div>
+    <div class="sync-msg" id="syncMsg">Connecting to Google Drive…</div>
+    <div class="sync-sub" id="syncSub">Please wait</div>
+  </div>
+  <!-- LOGIN VIEW -->
+  <div id="loginContainer" class="login-view" style="display: flex;">
+    <div class="login-card">
+      <div class="login-logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Kaner MR
+      </div>
+      <p style="text-align:center; font-size:13px; color:var(--slate-5); margin-bottom:24px;">Sign in to your account</p>
+      
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-control" type="text" id="loginUsername" placeholder="Enter username" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-control" type="password" id="loginPassword" placeholder="Enter password" onkeyup="if(event.key === 'Enter') handleLogin()" />
+      </div>
+      <button class="btn-primary" onclick="handleLogin()">Sign In</button>
+    </div>
+  </div>
+
+  <!-- APP CONTAINER -->
+  <div id="appContainer" style="display: none; flex-direction: column; width: 100%; flex: 1;">
+    <!-- HERO -->
+    <div class="hero" id="hero">
+      <div class="hero-brand">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Kaner Healthcare <span id="heroRoleBadge" style="opacity:0.7;font-weight:500;margin-left:4px"></span>
+      </div>
+      <div class="hero-greeting" id="heroGreeting">Good Morning!</div>
+      <div class="hero-date" id="heroDate"></div>
+      <div id="drivePill" class="drive-pill noauth" onclick="driveStatusClick()" style="display:none">
+        <div class="drive-dot grey"></div>
+        <span id="drivePillText">Drive</span>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="page-content" id="mainContent"></div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" id="nav-network" onclick="navigate('network')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="nav-label">Network</span>
+      </button>
+      <button class="nav-add" onclick="navigate('add-report')">
+        <div class="nav-add-circle">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <span class="nav-add-label">Log Call</span>
+      </button>
+      <button class="nav-item" id="nav-reports" onclick="navigate('reports')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="nav-label">Reports</span>
+      </button>
+      <button class="nav-item" id="nav-settings" onclick="navigate('settings')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M19.07 19.07l-1.41-1.41M5.34 5.34L3.93 3.93M20.5 12H22M2 12H3.5M12 20.5V22M12 2v1.5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        <span class="nav-label">Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast success" style="display:none"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+// GOOGLE DRIVE SYNC ENGINE
+// ══════════════════════════════════════════════════════════════════════════
+const DRIVE_CONFIG = {
+  // ── IMPORTANT: Replace with your own Google OAuth Client ID ──────────────
+  // Go to: https://console.cloud.google.com → APIs & Services → Credentials
+  // Create OAuth 2.0 Client ID (Web application), add your HTML file's origin
+  // to Authorised JavaScript origins, then paste the Client ID below.
+  CLIENT_ID:   '587500872820-g0i1tnl5m1l3r6t6bglg1n6lbpuinv52.apps.googleusercontent.com',
+  // ─────────────────────────────────────────────────────────────────────────
+  FOLDER_ID:   '1vLaMt_gSy2zBEhYi9q1yFR9ozfI0ZPJZ',
+  FILENAME:    'kaner_data.json',
+  SCOPE:       'https://www.googleapis.com/auth/drive.file',
+  DISCOVERY:   'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
+};
+
+let driveState = {
+  ready:       false,   // gapi loaded
+  authed:      false,   // user granted permission
+  fileId:      null,    // ID of kaner_data.json in Drive
+  lastSync:    null,    // ISO timestamp
+  syncing:     false,
+  accessToken: null,
+};
+
+// ── LOCAL FALLBACK ────────────────────────────────────────────────────────
+const LS = {
+  save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){} },
+  load(key)      { try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
+};
+
+// ── DEFAULT SEED DATA ─────────────────────────────────────────────────────
+const _today      = new Date().toISOString().split('T')[0];
+const _yesterday  = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+const _twoDaysAgo = new Date(Date.now() - 2*86400000).toISOString().split('T')[0];
+
+const DEFAULT_USERS = [
+  { id: 1, username: 'Admin',  password: 'Kaner',      role: 'admin' },
+  { id: 2, username: 'Rakesh', password: 'Kaner@123',  role: 'mr' },
+  { id: 3, username: 'MR1',    password: 'Kaner@1234', role: 'mr' }
+];
+const DEFAULT_DOCTORS = [
+  { id: 1, name: 'Dr. Ramesh Sharma', degree: 'MBBS, MD',  specialty: 'Cardiologist', area: 'Andheri West', phone: '9876543210', createdBy: 'Rakesh' },
+  { id: 2, name: 'Dr. Anita Desai',   degree: 'MBBS, DGO', specialty: 'Gynecologist', area: 'Bandra',       phone: '9876543211', createdBy: 'MR1' },
+  { id: 3, name: 'Dr. Vikram Singh',  degree: 'MS',        specialty: 'Orthopedic',   area: 'Juhu',         phone: '9876543212', createdBy: 'Admin' },
+];
+const DEFAULT_CHEMISTS = [
+  { id: 101, name: 'Apollo Pharmacy',  contactPerson: 'Suresh Bhai', area: 'Andheri West', phone: '9988776655', attachedDoctorId: 1, createdBy: 'Rakesh' },
+  { id: 102, name: 'Wellness Medical', contactPerson: 'Amit Kumar',  area: 'Bandra',       phone: '9988776644', attachedDoctorId: 2, createdBy: 'MR1' },
+];
+const DEFAULT_REPORTS = [
+  { id: 1, type: 'doctor',  targetId: 1,   date: _today,      session: 'Morning',   productsPromoted: ['Kan Q10','Kantel 40'],     samplesGiven: [{product:'Kan Q10',qty:5},{product:'Kantel 40',qty:2}], orderValue: 15000, competitor: 'Sun Pharma', competitorActivity: 'Launched a new CoQ10 variant.', inputsGiven: '1 Product Monograph.', createdBy: 'Rakesh', geoTag: null },
+  { id: 2, type: 'chemist', targetId: 101, date: _today,      session: 'Afternoon', productsPromoted: ['Kanpan-DSR','Kanace-SP'], samplesGiven: [], orderValue: 8500, competitor: 'Alkem',     competitorActivity: 'Providing 10+1 scheme.',      inputsGiven: 'LBL dropped.',          createdBy: 'Rakesh', geoTag: null },
+  { id: 3, type: 'doctor',  targetId: 2,   date: _today,      session: 'Morning',   productsPromoted: ['KanHB'],                  samplesGiven: [{product:'KanHB',qty:10}],                            orderValue: 22000, competitor: 'Intas',     competitorActivity: 'None',                        inputsGiven: 'Sampled well.',         createdBy: 'MR1',    geoTag: null },
+  { id: 4, type: 'doctor',  targetId: 3,   date: _yesterday,  session: 'Afternoon', productsPromoted: ['Kanfix 200','Kanace-SP'], samplesGiven: [{product:'Kanfix 200',qty:3}],                        orderValue: 11000, competitor: 'Cipla',     competitorActivity: 'Offering CME programs.',      inputsGiven: 'Literature shared.',    createdBy: 'Rakesh', geoTag: null },
+  { id: 5, type: 'doctor',  targetId: 1,   date: _yesterday,  session: 'Evening',   productsPromoted: ['KantelH'],                samplesGiven: [],                                                    orderValue: 9500,  competitor: '',          competitorActivity: '',                            inputsGiven: 'Follow-up visit.',      createdBy: 'Rakesh', geoTag: null },
+  { id: 6, type: 'doctor',  targetId: 2,   date: _twoDaysAgo, session: 'Morning',   productsPromoted: ['KanHB','Kancal max'],     samplesGiven: [{product:'Kancal max',qty:6}],                        orderValue: 17500, competitor: 'Mankind',   competitorActivity: 'New calcium combo launch.',   inputsGiven: 'Discussed clinical data.', createdBy: 'MR1', geoTag: null },
+];
+
+// ── IN-MEMORY DATA (populated from Drive or localStorage) ─────────────────
+let users    = LS.load('kaner_users')    || DEFAULT_USERS;
+let doctors  = LS.load('kaner_doctors')  || DEFAULT_DOCTORS;
+let chemists = LS.load('kaner_chemists') || DEFAULT_CHEMISTS;
+let reports  = LS.load('kaner_reports')  || DEFAULT_REPORTS;
+
+// ── CACHE TO localStorage AFTER EVERY MUTATION ────────────────────────────
+function saveLocal() {
+  LS.save('kaner_users',    users);
+  LS.save('kaner_doctors',  doctors);
+  LS.save('kaner_chemists', chemists);
+  LS.save('kaner_reports',  reports);
+}
+// Keep individual save names for compatibility
+function saveUsers()    { saveLocal(); scheduleDriveSync(); }
+function saveDoctors()  { saveLocal(); scheduleDriveSync(); }
+function saveChemists() { saveLocal(); scheduleDriveSync(); }
+function saveReports()  { saveLocal(); scheduleDriveSync(); }
+
+// ── DRIVE SYNC HELPERS ────────────────────────────────────────────────────
+let syncTimer = null;
+function scheduleDriveSync() {
+  // Debounce: wait 1.5s after last mutation before uploading
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => { syncToDrive(false); }, 1500);
+}
+
+function showSyncOverlay(msg, sub) {
+  document.getElementById('syncOverlay').style.display = 'flex';
+  document.getElementById('syncMsg').textContent  = msg || 'Syncing…';
+  document.getElementById('syncSub').textContent  = sub || '';
+}
+function hideSyncOverlay() {
+  document.getElementById('syncOverlay').style.display = 'none';
+}
+
+function updateDrivePill(status, text) {
+  const pill = document.getElementById('drivePill');
+  const dot  = pill?.querySelector('.drive-dot');
+  const txt  = document.getElementById('drivePillText');
+  if (!pill) return;
+  pill.style.display = 'inline-flex';
+  pill.className = `drive-pill ${status}`;
+  if (dot) {
+    dot.className = 'drive-dot ' + { synced:'green', syncing:'yellow', offline:'red', noauth:'grey' }[status];
+  }
+  if (txt) txt.textContent = text || 'Drive';
+}
+
+function driveStatusClick() {
+  if (!driveState.authed) {
+    initDriveAuth(true);
+  } else {
+    syncFromDrive(true);
+  }
+}
+
+// ── GOOGLE IDENTITY: TOKEN CLIENT ─────────────────────────────────────────
+let tokenClient = null;
+
+function initGoogleClients() {
+  gapi.load('client', async () => {
+    await gapi.client.init({
+      discoveryDocs: [DRIVE_CONFIG.DISCOVERY]
+    });
+    driveState.ready = true;
+
+    // Try silent token refresh (existing session)
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CONFIG.CLIENT_ID,
+      scope:     DRIVE_CONFIG.SCOPE,
+      callback:  handleTokenResponse,
+      error_callback: (err) => {
+        console.warn('Token error', err);
+        updateDrivePill('noauth', 'Connect Drive');
+      }
+    });
+
+    // Check if we have a cached token
+    const cachedToken = LS.load('kaner_drive_token');
+    if (cachedToken && cachedToken.expiry > Date.now()) {
+      gapi.client.setToken({ access_token: cachedToken.access_token });
+      driveState.accessToken = cachedToken.access_token;
+      driveState.authed = true;
+      updateDrivePill('syncing', 'Syncing…');
+      await syncFromDrive(false);
+    } else {
+      updateDrivePill('noauth', 'Connect Drive');
+    }
+  });
+}
+
+function handleTokenResponse(tokenResponse) {
+  if (tokenResponse.error) {
+    console.error('Token error:', tokenResponse.error);
+    updateDrivePill('offline', 'Auth failed');
+    hideSyncOverlay();
+    return;
+  }
+  driveState.accessToken = tokenResponse.access_token;
+  driveState.authed = true;
+  // Cache token (expires in ~1hr)
+  LS.save('kaner_drive_token', {
+    access_token: tokenResponse.access_token,
+    expiry: Date.now() + (tokenResponse.expires_in || 3600) * 1000
+  });
+  gapi.client.setToken({ access_token: tokenResponse.access_token });
+  syncFromDrive(true);
+}
+
+function initDriveAuth(showPrompt) {
+  if (!driveState.ready || !tokenClient) {
+    // gapi not loaded yet — retry in 1s
+    setTimeout(() => initDriveAuth(showPrompt), 1000);
+    return;
+  }
+  if (showPrompt) {
+    showSyncOverlay('Connecting to Google Drive…', 'A sign-in window will open');
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  } else {
+    tokenClient.requestAccessToken({ prompt: '' });
+  }
+}
+
+// ── FIND OR CREATE kaner_data.json ────────────────────────────────────────
+async function findOrCreateDriveFile() {
+  // Search for existing file in folder
+  const searchRes = await gapi.client.drive.files.list({
+    q: `name='${DRIVE_CONFIG.FILENAME}' and '${DRIVE_CONFIG.FOLDER_ID}' in parents and trashed=false`,
+    fields: 'files(id,name,modifiedTime)',
+    spaces: 'drive'
+  });
+  const files = searchRes.result.files;
+  if (files && files.length > 0) {
+    driveState.fileId = files[0].id;
+    return files[0].id;
+  }
+  // Create new file
+  const boundary = '-------314159265358979323846';
+  const payload = JSON.stringify(buildDrivePayload());
+  const body = [
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`,
+    JSON.stringify({ name: DRIVE_CONFIG.FILENAME, parents: [DRIVE_CONFIG.FOLDER_ID] }),
+    `\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n`,
+    payload,
+    `\r\n--${boundary}--`
+  ].join('');
+
+  const createRes = await gapi.client.request({
+    path: 'https://www.googleapis.com/upload/drive/v3/files',
+    method: 'POST',
+    params: { uploadType: 'multipart' },
+    headers: { 'Content-Type': `multipart/related; boundary="${boundary}"` },
+    body
+  });
+  driveState.fileId = createRes.result.id;
+  return createRes.result.id;
+}
+
+// ── BUILD PAYLOAD ─────────────────────────────────────────────────────────
+function buildDrivePayload() {
+  return { users, doctors, chemists, reports, lastUpdated: new Date().toISOString(), updatedBy: currentUser?.username || 'system' };
+}
+
+// ── UPLOAD TO DRIVE ───────────────────────────────────────────────────────
+async function syncToDrive(showOverlay) {
+  if (!driveState.authed || driveState.syncing) return;
+  driveState.syncing = true;
+  updateDrivePill('syncing', 'Saving…');
+  if (showOverlay) showSyncOverlay('Saving to Google Drive…', 'Do not close the app');
+
+  try {
+    if (!driveState.fileId) await findOrCreateDriveFile();
+
+    const payload = JSON.stringify(buildDrivePayload(), null, 2);
+    await gapi.client.request({
+      path: `https://www.googleapis.com/upload/drive/v3/files/${driveState.fileId}`,
+      method: 'PATCH',
+      params: { uploadType: 'media' },
+      headers: { 'Content-Type': 'application/json' },
+      body: payload
+    });
+
+    driveState.lastSync = new Date().toISOString();
+    const t = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    updateDrivePill('synced', `Synced ${t}`);
+  } catch(err) {
+    console.error('Drive upload error:', err);
+    updateDrivePill('offline', 'Sync failed');
+    if (err.status === 401) {
+      driveState.authed = false;
+      LS.save('kaner_drive_token', null);
+      updateDrivePill('noauth', 'Re-connect');
+    }
+  } finally {
+    driveState.syncing = false;
+    if (showOverlay) hideSyncOverlay();
+  }
+}
+
+// ── DOWNLOAD FROM DRIVE ───────────────────────────────────────────────────
+async function syncFromDrive(showOverlay) {
+  if (!driveState.authed || driveState.syncing) return;
+  driveState.syncing = true;
+  updateDrivePill('syncing', 'Syncing…');
+  if (showOverlay) showSyncOverlay('Syncing from Google Drive…', 'Loading latest data from all team members');
+
+  try {
+    if (!driveState.fileId) await findOrCreateDriveFile();
+
+    const res = await gapi.client.drive.files.get({
+      fileId: driveState.fileId,
+      alt: 'media'
+    });
+
+    const data = typeof res.result === 'string' ? JSON.parse(res.result) : res.result;
+
+    if (data && data.doctors) {
+      users    = data.users    || users;
+      doctors  = data.doctors  || doctors;
+      chemists = data.chemists || chemists;
+      reports  = data.reports  || reports;
+      saveLocal(); // mirror to localStorage
+      driveState.lastSync = new Date().toISOString();
+      const t = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+      updateDrivePill('synced', `Synced ${t}`);
+      // Re-render if app is open
+      if (currentUser) reRenderMain();
+    }
+  } catch(err) {
+    console.error('Drive download error:', err);
+    if (err.status === 404 || (err.result && err.result.error && err.result.error.code === 404)) {
+      // File doesn't exist yet — create it with defaults
+      driveState.fileId = null;
+      await syncToDrive(false);
+    } else if (err.status === 401) {
+      driveState.authed = false;
+      LS.save('kaner_drive_token', null);
+      updateDrivePill('noauth', 'Re-connect');
+    } else {
+      updateDrivePill('offline', 'No connection');
+    }
+  } finally {
+    driveState.syncing = false;
+    if (showOverlay) hideSyncOverlay();
+  }
+}
+
+// ── BOOT: load Google API once scripts are ready ──────────────────────────
+function waitForGapi() {
+  if (typeof gapi !== 'undefined' && typeof google !== 'undefined') {
+    initGoogleClients();
+  } else {
+    setTimeout(waitForGapi, 200);
+  }
+}
+
+// ── STATE & UI ────────────────────────────────────────────────────────────
+let currentUser = null;
+
+let currentView = 'dashboard';
+let networkSubTab = 'doctors';
+let networkSearch = '';
+let reportsSubTab = 'list';
+let doctorVisitsSearch = '';
+
+let currentProfileType = null;
+let currentProfileId = null;
+
+const KANER_PRODUCTS = ['Kan Q10','Kancal max','Febukan 40','KanHB','Kanvil 500','Kantel 40','KantelH','Kanfix 200','Kanace-SP','Kanpan-DSR'];
+const COMPETITORS = ['Sun Pharma','Cipla','Mankind','Alkem','Intas','Macleods','Abbott','Lupin','Zydus','Torrent','Other'];
+const SESSIONS = ['Morning', 'Afternoon', 'Evening'];
+
+const today = _today;
+
+// Initial form state for Add Report
+let reportForm = getInitialReportForm();
+function getInitialReportForm() {
+  return { type: 'doctor', targetId: '', session: 'Morning', products: [], samples: [], date: today, orderValue: '', competitor: '', competitorActivity: '', inputsGiven: '' };
+}
+
+// ── GEO TAGGING STATE ─────────────────────────────────────────────────────
+let geoState = { status: 'idle', lat: null, lng: null, accuracy: null, timestamp: null, error: null };
+// 'idle' | 'acquiring' | 'success' | 'error'
+
+function startGeoAcquisition() {
+  if (!navigator.geolocation) {
+    geoState = { status: 'error', error: 'Geolocation not supported on this device.' };
+    return;
+  }
+  geoState = { status: 'acquiring', lat: null, lng: null, accuracy: null, timestamp: null, error: null };
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      geoState = {
+        status: 'success',
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: Math.round(pos.coords.accuracy),
+        timestamp: new Date().toISOString(),
+        error: null
+      };
+      // Re-render only geo bar without full re-render to avoid resetting form
+      renderGeoBar();
+    },
+    (err) => {
+      const msgs = { 1: 'Location permission denied.', 2: 'Location unavailable.', 3: 'Location request timed out.' };
+      geoState = { status: 'error', lat: null, lng: null, accuracy: null, timestamp: null, error: msgs[err.code] || 'Unknown error.' };
+      renderGeoBar();
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+  renderGeoBar();
+}
+
+function renderGeoBar() {
+  const container = document.getElementById('geo-bar-container');
+  if (container) container.innerHTML = buildGeoBarHtml();
+}
+
+function buildGeoBarHtml() {
+  const s = geoState;
+  if (s.status === 'idle' || s.status === 'acquiring') {
+    return `<div class="geo-status-bar acquiring" id="geo-status-bar">
+      <div class="geo-dot pulse"></div>
+      <span>${s.status === 'idle' ? 'Preparing to capture location…' : 'Acquiring GPS location…'}</span>
+    </div>`;
+  }
+  if (s.status === 'success') {
+    return `<div class="geo-status-bar success" id="geo-status-bar">
+      <div class="geo-dot green"></div>
+      <div style="flex:1">
+        <div>📍 Location captured (±${s.accuracy}m)</div>
+        <div style="font-size:10px;color:#16a34a;font-family:'DM Mono',monospace;margin-top:2px">${s.lat.toFixed(6)}, ${s.lng.toFixed(6)}</div>
+      </div>
+      <button class="geo-map-link" onclick="window.open('https://maps.google.com/?q=${s.lat},${s.lng}','_blank')" style="cursor:pointer">
+        ${geoMapIcon()} View
+      </button>
+    </div>`;
+  }
+  // error
+  return `<div class="geo-status-bar error" id="geo-status-bar">
+    <div class="geo-dot red"></div>
+    <div style="flex:1">${s.error || 'Could not capture location.'}</div>
+    <button class="geo-map-link" style="background:#fef2f2;color:#991b1b" onclick="retryGeo()">Retry</button>
+  </div>`;
+}
+
+function retryGeo() { startGeoAcquisition(); }
+
+function geoMapIcon() {
+  return `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+}
+
+function buildGeoAdminRowHtml(report) {
+  if (!report.geoTag) return '';
+  const g = report.geoTag;
+  const mapsUrl = `https://maps.google.com/?q=${g.lat},${g.lng}`;
+  const time = g.timestamp ? new Date(g.timestamp).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }) : '';
+  return `<div class="geo-admin-row">
+    ${geoMapIcon()}
+    <span style="font-family:'DM Mono',monospace">${Number(g.lat).toFixed(5)}, ${Number(g.lng).toFixed(5)}</span>
+    ${g.accuracy ? `<span>±${g.accuracy}m</span>` : ''}
+    ${time ? `<span>@ ${time}</span>` : ''}
+    <a href="${mapsUrl}" target="_blank" class="geo-map-link">${geoMapIcon()} Open Map</a>
+  </div>`;
+}
+
+// ── GETTERS FOR ROLE BASED ACCESS ─────────────────────────────────────────
+function getVisibleDoctors() {
+  return currentUser.role === 'admin' ? doctors : doctors.filter(d => d.createdBy === currentUser.username);
+}
+function getVisibleChemists() {
+  return currentUser.role === 'admin' ? chemists : chemists.filter(c => c.createdBy === currentUser.username);
+}
+function getVisibleReports() {
+  return currentUser.role === 'admin' ? reports : reports.filter(r => r.createdBy === currentUser.username);
+}
+
+// ── AUTHENTICATION ────────────────────────────────────────────────────────
+function handleLogin() {
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value.trim();
+  
+  if(!u || !p) { showToast('Please enter username and password', 'error'); return; }
+
+  const user = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
+  
+  if(user) {
+    currentUser = user;
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('appContainer').style.display = 'flex';
+    document.getElementById('heroRoleBadge').textContent = `(${user.role === 'admin' ? 'Admin' : 'MR'})`;
+    navigate('dashboard');
+    showToast('Login Successful!');
+    // Pull latest data from Drive after login
+    if (driveState.authed) {
+      syncFromDrive(false).then(() => { navigate('dashboard'); });
+    }
+  } else {
+    showToast('Invalid username or password', 'error');
+  }
+}
+
+function updateGreetingTime() {
+  if(!currentUser) return;
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+  document.getElementById('heroGreeting').textContent = `${greeting}, ${currentUser.username}!`;
+  document.getElementById('heroDate').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+// ── ROUTING ───────────────────────────────────────────────────────────────
+function navigate(view) {
+  if(!currentUser) {
+    document.getElementById('loginContainer').style.display = 'flex';
+    document.getElementById('appContainer').style.display = 'none';
+    return;
+  }
+  
+  currentView = view;
+  const hero = document.getElementById('hero');
+  const content = document.getElementById('mainContent');
+
+  // Update nav highlights
+  ['dashboard','network','reports','settings'].forEach(v => {
+    const el = document.getElementById('nav-'+v);
+    if (el) el.classList.toggle('active', currentView === v);
+  });
+
+  // Hero visibility
+  const showHero = currentView === 'dashboard';
+  hero.style.display = showHero ? '' : 'none';
+  if (showHero) updateGreetingTime();
+
+  switch (currentView) {
+    case 'dashboard':    content.innerHTML = renderDashboard(); break;
+    case 'network':      content.innerHTML = renderNetwork(); break;
+    case 'add-doctor':   content.innerHTML = renderAddEntity('doctor'); break;
+    case 'add-chemist':  content.innerHTML = renderAddEntity('chemist'); break;
+    case 'profile':      content.innerHTML = renderProfile(); break;
+    case 'reports':      content.innerHTML = renderReports(); break;
+    case 'add-report':
+      // Reset geo state and start acquisition whenever the form is opened
+      geoState = { status: 'idle', lat: null, lng: null, accuracy: null, timestamp: null, error: null };
+      content.innerHTML = renderAddReport();
+      startGeoAcquisition();
+      break;
+    case 'settings':     content.innerHTML = renderSettings(); break;
+    case 'manage-users': content.innerHTML = renderManageUsers(); break;
+    case 'geo-audit':    content.innerHTML = renderGeoAudit(); break;
+    default:             content.innerHTML = renderDashboard();
+  }
+  content.scrollTop = 0;
+}
+
+function viewProfile(type, id) {
+  currentProfileType = type;
+  currentProfileId = id;
+  navigate('profile');
+}
+
+// ── ICONS (inline SVG helpers) ─────────────────────────────────────────
+const ico = {
+  stethoscope: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>`,
+  store: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+  trending: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+  fileText: `<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+  pin: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  download: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+  search: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+  back: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
+  userPlus: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>`,
+  sun: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+  box: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+  phone: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+  trash: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`
+};
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const visibleReports = getVisibleReports();
+  const visibleDocs = getVisibleDoctors();
+  const visibleChems = getVisibleChemists();
+
+  const todaysReports = visibleReports.filter(r => r.date === today);
+  const drCalls = todaysReports.filter(r => r.type === 'doctor').length;
+  const chCalls = todaysReports.filter(r => r.type === 'chemist').length;
+  const orderTotal = todaysReports.reduce((s, r) => s + Number(r.orderValue || 0), 0);
+
+  const titlePrefix = currentUser.role === 'admin' ? 'Team' : 'My';
+
+  const recentHtml = todaysReports.length === 0
+    ? `<div class="empty-state">
+        <div class="empty-icon">${ico.fileText}</div>
+        <p class="empty-text">No calls reported today yet.</p>
+        <button class="btn-primary" style="width:auto;padding:10px 24px;margin-top:16px;font-size:13px;" onclick="navigate('add-report')">Log a Call</button>
+       </div>`
+    : todaysReports.slice(0, 3).map(r => {
+        const tgt = r.type === 'doctor' ? doctors.find(d => d.id === r.targetId) : chemists.find(c => c.id === r.targetId);
+        return `<div class="report-card">
+          <div class="report-card-left">
+            <div class="entity-icon ${r.type}">${r.type === 'doctor' ? ico.stethoscope : ico.store}</div>
+            <div>
+              <div class="entity-name">${tgt?.name || 'Unknown'}</div>
+              <div class="entity-type" style="display:flex;align-items:center;gap:4px">
+                ${r.type} <span style="opacity:0.5">•</span> ${r.session}
+              </div>
+            </div>
+          </div>
+          <div class="order-value">₹${Number(r.orderValue).toLocaleString('en-IN')}</div>
+        </div>`;
+      }).join('');
+
+  return `<div class="view">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#f0fdf4">
+          <span style="color:#059669;display:flex;gap:4px">${ico.stethoscope}${ico.store}</span>
+        </div>
+        <div class="stat-value">${todaysReports.length}</div>
+        <div class="stat-label">${titlePrefix} Calls Today</div>
+        <div class="stat-sub">Dr: ${drCalls} &nbsp;|&nbsp; Ch: ${chCalls}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#f0fdf4;color:#059669">${ico.trending}</div>
+        <div class="stat-value" style="font-size:22px;font-family:'DM Mono',monospace">₹${orderTotal.toLocaleString('en-IN')}</div>
+        <div class="stat-label">${titlePrefix} Orders Today</div>
+      </div>
+    </div>
+
+    <div class="section-hdr">
+      <span class="section-title">Recent Reports</span>
+      <button class="section-link" onclick="navigate('reports')">View All</button>
+    </div>
+    ${recentHtml}
+  </div>`;
+}
+
+// ── NETWORK ───────────────────────────────────────────────────────────────
+function renderNetwork() {
+  const isDoc = networkSubTab === 'doctors';
+  const list = isDoc ? getVisibleDoctors() : getVisibleChemists();
+  const q = networkSearch.toLowerCase();
+  const filtered = list.filter(x =>
+    x.name.toLowerCase().includes(q) ||
+    (isDoc ? x.specialty.toLowerCase().includes(q) : x.area.toLowerCase().includes(q))
+  );
+
+  const cards = filtered.length === 0
+    ? `<p style="text-align:center;color:var(--slate-5);font-size:13px;padding:24px 0">No ${networkSubTab} found.</p>`
+    : filtered.map(x => {
+        let attachedDocHtml = '';
+        if(!isDoc && x.attachedDoctorId) {
+          const doc = doctors.find(d => d.id == x.attachedDoctorId);
+          if(doc) attachedDocHtml = `<div class="network-meta" style="color:var(--slate-7); margin-top:4px;">${ico.stethoscope} Attached: ${doc.name}</div>`;
+        }
+        
+        const creatorBadge = currentUser.role === 'admin' ? `<div class="creator-badge">👤 By ${x.createdBy}</div>` : '';
+
+        return isDoc
+        ? `<div class="network-card clickable doctor" onclick="viewProfile('doctor', ${x.id})">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="network-name">${x.name}</div>
+                <div class="network-sub">${x.degree ? x.degree + ' • ' : ''}${x.specialty}</div>
+              </div>
+              ${creatorBadge}
+            </div>
+            <div class="network-meta">${ico.pin} ${x.area}</div>
+           </div>`
+        : `<div class="network-card clickable chemist" onclick="viewProfile('chemist', ${x.id})">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="network-name">${x.name}</div>
+                <div class="network-sub chemist-sub">Contact: ${x.contactPerson}</div>
+              </div>
+              ${creatorBadge}
+            </div>
+            ${attachedDocHtml}
+            <div class="network-meta">${ico.pin} ${x.area}</div>
+           </div>`
+    }).join('');
+
+  return `<div class="view">
+    <div class="section-hdr" style="margin-bottom:16px">
+      <span class="section-title">Network</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn-icon slate" onclick="exportNetwork()" title="Export CSV">${ico.download}</button>
+        <button class="btn-icon teal" onclick="navigate('add-${isDoc ? 'doctor' : 'chemist'}')">${ico.userPlus} Add</button>
+      </div>
+    </div>
+
+    <div class="tab-toggle">
+      <button class="${networkSubTab === 'doctors' ? 'active' : ''}" onclick="setNetworkTab('doctors')">Doctors</button>
+      <button class="${networkSubTab === 'chemists' ? 'active' : ''}" onclick="setNetworkTab('chemists')">Chemists</button>
+    </div>
+
+    <div class="search-wrap">
+      ${ico.search}
+      <input class="search-input" type="text" placeholder="Search ${networkSubTab}…" value="${networkSearch.replace(/"/g,'&quot;')}" oninput="networkSearchChange(this.value)" />
+    </div>
+
+    ${cards}
+  </div>`;
+}
+
+function setNetworkTab(tab) { networkSubTab = tab; networkSearch = ''; reRenderMain(); }
+function networkSearchChange(v) { networkSearch = v; reRenderMain(); }
+
+// ── PROFILE VIEW ──────────────────────────────────────────────────────────
+function renderProfile() {
+  const isDoc = currentProfileType === 'doctor';
+  const entity = isDoc ? getVisibleDoctors().find(d => d.id === currentProfileId) : getVisibleChemists().find(c => c.id === currentProfileId);
+    
+  if(!entity) { navigate('network'); return ''; }
+
+  const entityReports = getVisibleReports().filter(r => r.type === currentProfileType && r.targetId === currentProfileId).sort((a,b) => new Date(b.date) - new Date(a.date));
+  const totalOrders = entityReports.reduce((sum, r) => sum + (Number(r.orderValue) || 0), 0);
+  let totalSamples = 0;
+  
+  if(isDoc) {
+    entityReports.forEach(r => { if(r.samplesGiven) r.samplesGiven.forEach(s => totalSamples += s.qty); });
+  }
+
+  let attachedHtml = '';
+  if(!isDoc && entity.attachedDoctorId) {
+    const doc = doctors.find(d => d.id == entity.attachedDoctorId);
+    if(doc) attachedHtml = `<div style="font-size:12px;color:var(--slate-5);margin-top:6px;font-weight:600;display:flex;align-items:center;gap:4px">${ico.stethoscope} Attached: ${doc.name}</div>`;
+  }
+
+  const deleteBtnHtml = currentUser.role === 'admin' ? `
+    <div style="margin-top:24px; text-align:center;">
+      <button class="btn-icon red" style="padding:10px 20px; font-size:13px; margin:0 auto;" onclick="deleteProfile('${currentProfileType}', ${currentProfileId})">
+        ${ico.trash} Delete Profile & Data
+      </button>
+    </div>
+  ` : '';
+
+  const creatorBadge = currentUser.role === 'admin' ? `<div class="creator-badge" style="margin-top:12px">👤 Added by ${entity.createdBy}</div>` : '';
+
+  // Visit History Cards
+  const historyCards = entityReports.length === 0 
+    ? `<div class="empty-state"><p class="empty-text">No visits recorded yet.</p></div>`
+    : entityReports.map(r => {
+        let pills = (r.productsPromoted || []).map(p => `<span class="pill-tag">${p}</span>`);
+        if (r.samplesGiven && r.samplesGiven.length > 0) {
+          r.samplesGiven.forEach(s => {
+            pills.push(`<span class="pill-tag" style="background:#fff7ed;color:#ea580c">${ico.box} ${s.product} (${s.qty})</span>`);
+          });
+        }
+        const pillHtml = pills.length > 0 ? `<div style="margin-bottom:8px;display:flex;flex-wrap:wrap;">${pills.join('')}</div>` : '';
+
+        return `
+        <div class="dcr-card">
+          ${currentUser.role === 'admin' ? `<button class="btn-icon red" style="position:absolute; top:12px; right:12px; padding:6px;" onclick="deleteReport(${r.id})">${ico.trash}</button>` : ''}
+          <div class="dcr-header" style="margin-bottom:8px">
+            <div>
+              <span style="font-size:10px;font-weight:700;color:var(--slate-5);display:flex;align-items:center;gap:3px">${ico.sun} ${r.session}</span>
+            </div>
+            <div style="${currentUser.role === 'admin' ? 'margin-right: 32px' : ''}">
+              <div class="dcr-date">${r.date}</div>
+              <div class="dcr-order" style="text-align:right;margin-top:4px">₹${Number(r.orderValue || 0).toLocaleString('en-IN')}</div>
+            </div>
+          </div>
+          ${pillHtml}
+          ${r.competitor ? `<div class="dcr-detail-row"><span class="dcr-detail-label">Competitor</span><span>${r.competitor}</span></div>` : ''}
+          ${r.competitorActivity ? `<div class="dcr-detail-row"><span class="dcr-detail-label">Activity</span><span style="flex:1">${r.competitorActivity}</span></div>` : ''}
+          ${r.inputsGiven ? `<div class="dcr-detail-row"><span class="dcr-detail-label">Inputs</span><span style="flex:1">${r.inputsGiven}</span></div>` : ''}
+          ${currentUser.role === 'admin' ? buildGeoAdminRowHtml(r) : ''}
+        </div>`;
+    }).join('');
+
+  return `<div class="view">
+    <div class="page-hdr">
+      <button class="back-btn" onclick="navigate('network')">${ico.back}</button>
+      <h2 class="page-title">${isDoc ? 'Doctor Profile' : 'Chemist Profile'}</h2>
+    </div>
+
+    <div class="form-card" style="margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div style="font-size:18px; font-weight:800; color:var(--slate-9);">${entity.name}</div>
+          <div style="font-size:13px; color:${isDoc ? 'var(--blue)' : 'var(--orange)'}; font-weight:700; margin-top:4px;">
+            ${isDoc ? `${entity.degree ? entity.degree + ' • ' : ''}${entity.specialty}` : 'Contact: '+entity.contactPerson}
+          </div>
+          ${attachedHtml}
+          <div style="font-size:12px; color:var(--slate-5); margin-top:8px; display:flex; align-items:center; gap:4px;">
+            ${ico.pin} ${entity.area}
+          </div>
+          ${creatorBadge}
+        </div>
+        <a href="tel:${entity.phone}" class="btn-icon teal" style="padding:12px; border-radius:50%; box-shadow:var(--shadow-sm);">${ico.phone}</a>
+      </div>
+    </div>
+
+    <div class="stats-grid" style="${isDoc ? 'grid-template-columns: 1fr 1fr;' : 'grid-template-columns: 1fr 1fr;'}">
+      <div class="stat-card">
+        <div class="stat-value">${entityReports.length}</div>
+        <div class="stat-label">Total Visits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="font-size:22px;">₹${totalOrders.toLocaleString('en-IN')}</div>
+        <div class="stat-label">Total Orders</div>
+      </div>
+      ${isDoc ? `
+      <div class="stat-card" style="grid-column: span 2;">
+        <div class="stat-value" style="color:var(--teal)">${totalSamples}</div>
+        <div class="stat-label">Samples Distributed</div>
+      </div>` : ''}
+    </div>
+
+    <div class="section-hdr" style="margin-top:10px;">
+      <span class="section-title">Visit History</span>
+    </div>
+    ${historyCards}
+    
+    ${deleteBtnHtml}
+  </div>`;
+}
+
+function reRenderMain() {
+  switch (currentView) {
+    case 'network':      document.getElementById('mainContent').innerHTML = renderNetwork(); break;
+    case 'reports':      document.getElementById('mainContent').innerHTML = renderReports(); break;
+    case 'add-report':   document.getElementById('mainContent').innerHTML = renderAddReport(); break; // geo state preserved, bar re-built from geoState
+    case 'profile':      document.getElementById('mainContent').innerHTML = renderProfile(); break;
+    case 'manage-users': document.getElementById('mainContent').innerHTML = renderManageUsers(); break;
+  }
+}
+
+// ── DELETE FUNCTIONALITY (ADMIN ONLY) ─────────────────────────────────────
+function deleteReport(id) {
+  if (currentUser.role !== 'admin') return;
+  if (!confirm('Are you sure you want to delete this report? This cannot be undone.')) return;
+  reports = reports.filter(r => r.id !== id);
+  saveReports();
+  showToast('Report deleted');
+  reRenderMain();
+}
+
+function deleteProfile(type, id) {
+  if (currentUser.role !== 'admin') return;
+  if (!confirm('Delete this profile? All associated reports will remain, but the profile will be gone.')) return;
+  if (type === 'doctor') {
+    doctors = doctors.filter(d => d.id !== id);
+    saveDoctors();
+  } else {
+    chemists = chemists.filter(c => c.id !== id);
+    saveChemists();
+  }
+  showToast('Profile deleted');
+  navigate('network');
+}
+
+// ── ADD ENTITY ─────────────────────────────────────────────────────────────
+function renderAddEntity(type) {
+  const isDoc = type === 'doctor';
+  const specialties = ['Cardiologist','General Physician','Pediatrician','Orthopedic','Gynecologist','Diabetologist','Gastroenterologist'];
+  const attachedDocOptions = getVisibleDoctors().map(d => `<option value="${d.id}">${d.name} (${d.area})</option>`).join('');
+  
+  let chemistExtraFields = '';
+  if(!isDoc) {
+    chemistExtraFields = `
+      <div class="form-group">
+        <label class="form-label">Contact Person</label>
+        <input class="form-control" type="text" id="ent-contact" placeholder="Manager / Owner Name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Attached Doctor (Optional)</label>
+        <select class="form-control" id="ent-attached-doc">
+          <option value="">— Select Doctor —</option>
+          ${attachedDocOptions}
+        </select>
+      </div>
+    `;
+  }
+
+  return `<div class="view">
+    <div class="page-hdr">
+      <button class="back-btn" onclick="navigate('network')">${ico.back}</button>
+      <h2 class="page-title">Add ${isDoc ? 'Doctor' : 'Chemist'}</h2>
+    </div>
+    <div class="form-card">
+      <div class="form-group">
+        <label class="form-label">${isDoc ? 'Doctor Name' : 'Pharmacy Name'}</label>
+        <input class="form-control" type="text" id="ent-name" placeholder="${isDoc ? 'e.g. Ramesh Sharma' : 'e.g. Apollo Pharmacy'}" />
+      </div>
+      ${isDoc ? `
+      <div class="form-group">
+        <label class="form-label">Degree</label>
+        <input class="form-control" type="text" id="ent-degree" placeholder="e.g. MBBS, MD" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Specialty</label>
+        <select class="form-control" id="ent-specialty">
+          <option value="">Select Specialty</option>
+          ${specialties.map(s => `<option>${s}</option>`).join('')}
+        </select>
+      </div>` : chemistExtraFields}
+      <div class="form-group">
+        <label class="form-label">Area / Territory</label>
+        <input class="form-control" type="text" id="ent-area" placeholder="Location" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input class="form-control" type="tel" id="ent-phone" placeholder="10-digit number" />
+      </div>
+      <button class="btn-primary" onclick="saveEntity('${type}')">Save Profile</button>
+    </div>
+  </div>`;
+}
+
+function saveEntity(type) {
+  const isDoc = type === 'doctor';
+  const name = document.getElementById('ent-name').value.trim();
+  const area = document.getElementById('ent-area').value.trim();
+  if (!name || !area) { showToast('Please fill required fields', 'error'); return; }
+
+  const creator = currentUser.username;
+
+  if (isDoc) {
+    const degree = document.getElementById('ent-degree').value.trim();
+    const specialty = document.getElementById('ent-specialty').value;
+    const phone = document.getElementById('ent-phone').value.trim();
+    doctors.push({ id: Date.now(), name: name.startsWith('Dr.') ? name : `Dr. ${name}`, degree, specialty, area, phone, createdBy: creator });
+    saveDoctors();
+  } else {
+    const contact = document.getElementById('ent-contact').value.trim();
+    const phone = document.getElementById('ent-phone').value.trim();
+    const attachedDocId = document.getElementById('ent-attached-doc').value;
+    chemists.push({ id: Date.now(), name, contactPerson: contact, area, phone, attachedDoctorId: attachedDocId ? parseInt(attachedDocId) : null, createdBy: creator });
+    saveChemists();
+  }
+  showToast(`${isDoc ? 'Doctor' : 'Chemist'} added!`);
+  navigate('network');
+}
+
+// ── REPORTS & SAMPLE ANALYTICS ───────────────────────────────────────────
+function renderReports() {
+  if (reportsSubTab === 'samples') return renderSampleAnalytics();
+  if (reportsSubTab === 'visits') return renderDoctorVisits();
+
+  const visibleReports = getVisibleReports();
+  const sorted = [...visibleReports].sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  const cards = sorted.map(r => {
+    const isDoc = r.type === 'doctor';
+    const tgt = isDoc ? doctors.find(d => d.id === r.targetId) : chemists.find(c => c.id === r.targetId);
+    
+    // Pills
+    let pills = (r.productsPromoted || []).map(p => `<span class="pill-tag">${p}</span>`);
+    if (r.samplesGiven && r.samplesGiven.length > 0) {
+      r.samplesGiven.forEach(s => {
+        pills.push(`<span class="pill-tag" style="background:#fff7ed;color:#ea580c">${ico.box} ${s.product} (${s.qty})</span>`);
+      });
+    }
+    const pillHtml = pills.length > 0 ? `<div style="margin-bottom:8px;display:flex;flex-wrap:wrap;">${pills.join('')}</div>` : '';
+    const creatorBadge = currentUser.role === 'admin' ? `<div class="creator-badge" style="margin-bottom:8px">👤 By ${r.createdBy}</div>` : '';
+
+    return `<div class="dcr-card">
+      ${currentUser.role === 'admin' ? `<button class="btn-icon red" style="position:absolute; top:12px; right:12px; padding:6px;" onclick="deleteReport(${r.id})">${ico.trash}</button>` : ''}
+      <div class="dcr-header">
+        <div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="dcr-badge ${r.type}">${r.type}</span>
+            <span style="font-size:10px;font-weight:700;color:var(--slate-5);display:flex;align-items:center;gap:3px">${ico.sun} ${r.session}</span>
+          </div>
+          <div class="dcr-name" style="margin-top:8px">${tgt?.name || 'Unknown'}</div>
+          ${creatorBadge}
+        </div>
+        <div style="${currentUser.role === 'admin' ? 'margin-right: 32px' : ''}">
+          <div class="dcr-date">${r.date}</div>
+          <div class="dcr-order" style="text-align:right;margin-top:6px">₹${Number(r.orderValue || 0).toLocaleString('en-IN')}</div>
+        </div>
+      </div>
+      ${pillHtml}
+      ${r.competitor ? `<div class="dcr-detail-row"><span class="dcr-detail-label">Competitor</span><span>${r.competitor}</span></div>` : ''}
+      ${r.competitorActivity ? `<div class="dcr-detail-row"><span class="dcr-detail-label">Activity</span><span style="flex:1">${r.competitorActivity}</span></div>` : ''}
+      ${r.inputsGiven ? `<div class="dcr-detail-row"><span class="dcr-detail-label">Inputs</span><span style="flex:1">${r.inputsGiven}</span></div>` : ''}
+      ${currentUser.role === 'admin' ? buildGeoAdminRowHtml(r) : ''}
+    </div>`;
+  }).join('');
+
+  return `<div class="view">
+    <div class="section-hdr" style="margin-bottom:16px">
+      <span class="section-title">Reports</span>
+      <button class="btn-icon teal" onclick="exportReports()">${ico.download} Export</button>
+    </div>
+
+    <div class="tab-toggle" style="display:grid;grid-template-columns:1fr 1fr 1fr">
+      <button class="${reportsSubTab === 'list' ? 'active' : ''}" onclick="setReportsTab('list')">Call Logs</button>
+      <button class="${reportsSubTab === 'visits' ? 'active' : ''}" onclick="setReportsTab('visits')">Dr. Visits</button>
+      <button class="${reportsSubTab === 'samples' ? 'active' : ''}" onclick="setReportsTab('samples')">Samples</button>
+    </div>
+
+    ${sorted.length === 0 ? `<div class="empty-state"><div class="empty-icon">${ico.fileText}</div><p class="empty-text">No reports yet.</p></div>` : cards}
+  </div>`;
+}
+
+function renderDoctorVisits() {
+  const visibleReports = getVisibleReports().filter(r => r.type === 'doctor');
+  const q = doctorVisitsSearch.toLowerCase();
+
+  // Group by date descending
+  const byDate = {};
+  visibleReports.forEach(r => {
+    if(!byDate[r.date]) byDate[r.date] = [];
+    byDate[r.date].push(r);
+  });
+  const sortedDates = Object.keys(byDate).sort((a, b) => new Date(b) - new Date(a));
+
+  // Filter by search
+  let contentHtml = '';
+  let totalVisits = 0;
+  let filteredDates = sortedDates;
+
+  if(q) {
+    filteredDates = sortedDates.filter(date => {
+      const inDate = date.includes(q);
+      const inDoctors = byDate[date].some(r => {
+        const doc = doctors.find(d => d.id === r.targetId);
+        return doc && doc.name.toLowerCase().includes(q);
+      });
+      return inDate || inDoctors;
+    });
+  }
+
+  if(filteredDates.length === 0) {
+    contentHtml = `<div class="empty-state"><div class="empty-icon">${ico.stethoscope}</div><p class="empty-text">No doctor visits found.</p></div>`;
+  } else {
+    contentHtml = filteredDates.map(date => {
+      const dayReports = q
+        ? byDate[date].filter(r => {
+            const doc = doctors.find(d => d.id === r.targetId);
+            return date.includes(q) || (doc && doc.name.toLowerCase().includes(q));
+          })
+        : byDate[date];
+
+      if(dayReports.length === 0) return '';
+      totalVisits += dayReports.length;
+
+      const dateObj = new Date(date + 'T00:00:00');
+      const dayLabel = dateObj.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      const isToday = date === today;
+      const dayTotal = dayReports.reduce((s,r) => s + Number(r.orderValue || 0), 0);
+
+      const visitCards = dayReports.map(r => {
+        const doc = doctors.find(d => d.id === r.targetId);
+        const sampleCount = (r.samplesGiven || []).reduce((s, x) => s + x.qty, 0);
+        const prodCount = (r.productsPromoted || []).length;
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--slate-1);">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="entity-icon doctor" style="width:36px;height:36px;flex-shrink:0">${ico.stethoscope}</div>
+              <div>
+                <div style="font-size:14px;font-weight:700;color:var(--slate-9)">${doc?.name || 'Unknown'}</div>
+                <div style="font-size:11px;color:var(--slate-5);margin-top:2px;display:flex;align-items:center;gap:6px">
+                  <span style="display:flex;align-items:center;gap:2px">${ico.sun} ${r.session}</span>
+                  ${prodCount > 0 ? `<span>• ${prodCount} product${prodCount > 1 ? 's' : ''}</span>` : ''}
+                  ${sampleCount > 0 ? `<span>• ${sampleCount} sample${sampleCount > 1 ? 's' : ''}</span>` : ''}
+                </div>
+                ${doc ? `<div style="font-size:11px;color:var(--blue);font-weight:600;margin-top:2px">${doc.specialty || ''}</div>` : ''}
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:13px;font-weight:800;color:var(--emerald);font-family:'DM Mono',monospace">₹${Number(r.orderValue || 0).toLocaleString('en-IN')}</div>
+            </div>
+          </div>`;
+      }).join('');
+
+      return `
+        <div style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div>
+              <span style="font-size:13px;font-weight:800;color:var(--slate-9)">${dayLabel}</span>
+              ${isToday ? `<span style="margin-left:8px;padding:2px 8px;background:var(--teal);color:#fff;font-size:9px;font-weight:800;border-radius:999px;letter-spacing:.06em;text-transform:uppercase">Today</span>` : ''}
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:11px;font-weight:700;color:var(--slate-5)">${dayReports.length} visit${dayReports.length > 1 ? 's' : ''}</div>
+              <div style="font-size:12px;font-weight:700;color:var(--emerald);font-family:'DM Mono',monospace">₹${dayTotal.toLocaleString('en-IN')}</div>
+            </div>
+          </div>
+          <div class="form-card" style="padding:0 16px;margin-bottom:0">
+            ${visitCards}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  return `<div class="view">
+    <div class="section-hdr" style="margin-bottom:16px">
+      <span class="section-title">Reports</span>
+      <button class="btn-icon teal" onclick="exportReports()">${ico.download} Export</button>
+    </div>
+
+    <div class="tab-toggle" style="display:grid;grid-template-columns:1fr 1fr 1fr">
+      <button class="${reportsSubTab === 'list' ? 'active' : ''}" onclick="setReportsTab('list')">Call Logs</button>
+      <button class="${reportsSubTab === 'visits' ? 'active' : ''}" onclick="setReportsTab('visits')">Dr. Visits</button>
+      <button class="${reportsSubTab === 'samples' ? 'active' : ''}" onclick="setReportsTab('samples')">Samples</button>
+    </div>
+
+    <div class="search-wrap">
+      ${ico.search}
+      <input class="search-input" type="text" placeholder="Search by doctor or date…" value="${doctorVisitsSearch.replace(/"/g,'&quot;')}" oninput="doctorVisitsSearchChange(this.value)" />
+    </div>
+
+    ${contentHtml}
+  </div>`;
+}
+
+function renderSampleAnalytics() {
+  const totals = {};
+  getVisibleReports().forEach(r => {
+    if(r.samplesGiven) {
+      r.samplesGiven.forEach(s => {
+        totals[s.product] = (totals[s.product] || 0) + s.qty;
+      });
+    }
+  });
+
+  const productKeys = Object.keys(totals).sort((a,b) => totals[b] - totals[a]);
+  
+  let listHtml = '';
+  if(productKeys.length === 0) {
+    listHtml = `<div class="empty-state"><div class="empty-icon">${ico.box}</div><p class="empty-text">No samples distributed yet.</p></div>`;
+  } else {
+    listHtml = `<div class="form-card" style="padding:10px 20px;">
+      ${productKeys.map(k => `
+        <div class="sample-tracker-item">
+          <span class="sample-brand">${k}</span>
+          <span class="sample-qty">${totals[k]}</span>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  return `<div class="view">
+    <div class="section-hdr" style="margin-bottom:16px">
+      <span class="section-title">Reports</span>
+      <button class="btn-icon teal" onclick="exportReports()">${ico.download} Export</button>
+    </div>
+
+    <div class="tab-toggle" style="display:grid;grid-template-columns:1fr 1fr 1fr">
+      <button class="${reportsSubTab === 'list' ? 'active' : ''}" onclick="setReportsTab('list')">Call Logs</button>
+      <button class="${reportsSubTab === 'visits' ? 'active' : ''}" onclick="setReportsTab('visits')">Dr. Visits</button>
+      <button class="${reportsSubTab === 'samples' ? 'active' : ''}" onclick="setReportsTab('samples')">Samples</button>
+    </div>
+    
+    <div style="font-size:12px;font-weight:700;color:var(--slate-5);letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px">Total Samples Distributed</div>
+    ${listHtml}
+  </div>`;
+}
+
+function setReportsTab(tab) { reportsSubTab = tab; doctorVisitsSearch = ''; reRenderMain(); }
+function doctorVisitsSearchChange(v) { doctorVisitsSearch = v; reRenderMain(); }
+
+// ── ADD REPORT ─────────────────────────────────────────────────────────────
+function renderAddReport() {
+  const targetList = reportForm.type === 'doctor' ? getVisibleDoctors() : getVisibleChemists();
+  const productChips = KANER_PRODUCTS.map(p =>
+    `<button class="chip ${reportForm.products.includes(p) ? 'selected' : ''}" onclick="toggleProduct('${p}')">${p}</button>`
+  ).join('');
+  const competitorOpts = COMPETITORS.map(c => `<option ${reportForm.competitor === c ? 'selected' : ''}>${c}</option>`).join('');
+
+  // Samples specific HTML for Doctor
+  let samplesHtml = '';
+  if (reportForm.type === 'doctor') {
+    samplesHtml = `
+      <div class="form-group">
+        <label class="form-label" style="display:flex;justify-content:space-between;align-items:center;">
+          Samples Distributed
+          <button class="btn-icon teal" style="padding:4px 10px;font-size:10px" onclick="addSampleRow()">+ Add</button>
+        </label>
+        ${reportForm.samples.length === 0 ? `<div style="font-size:12px;color:var(--slate-5);font-style:italic">No samples added.</div>` : ''}
+        ${reportForm.samples.map((s, idx) => `
+          <div class="sample-row">
+            <select class="form-control" onchange="updateSampleRow(${idx}, 'product', this.value)">
+              <option value="">Select Brand</option>
+              ${KANER_PRODUCTS.map(p => `<option value="${p}" ${s.product === p ? 'selected' : ''}>${p}</option>`).join('')}
+            </select>
+            <input class="form-control" type="number" min="1" placeholder="Qty" value="${s.qty}" oninput="updateSampleRow(${idx}, 'qty', this.value)" />
+            <button class="btn-icon slate" style="padding:8px" onclick="removeSampleRow(${idx})">✕</button>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  return `<div class="view">
+    <div class="page-hdr">
+      <button class="back-btn" onclick="navigate('dashboard')">${ico.back}</button>
+      <h2 class="page-title">Log a Call</h2>
+    </div>
+
+    <div class="form-card" style="margin-bottom:12px">
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Visit Type</label>
+        <div class="visit-type-wrap" style="margin-top:10px">
+          <button class="visit-type-btn doctor ${reportForm.type === 'doctor' ? 'selected' : ''}" onclick="setReportType('doctor')">
+            <div class="visit-type-icon">${ico.stethoscope}</div>
+            <div class="visit-type-label">Doctor</div>
+          </button>
+          <button class="visit-type-btn chemist ${reportForm.type === 'chemist' ? 'selected' : ''}" onclick="setReportType('chemist')">
+            <div class="visit-type-icon">${ico.store}</div>
+            <div class="visit-type-label">Chemist</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Session</label>
+        <select class="form-control" onchange="reportForm.session=this.value">
+          ${SESSIONS.map(s => `<option value="${s}" ${reportForm.session === s ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-card" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">${reportForm.type === 'doctor' ? 'Select Doctor' : 'Select Chemist'}</label>
+        <select class="form-control" onchange="reportForm.targetId=parseInt(this.value)">
+          <option value="">— Choose —</option>
+          ${targetList.map(t => `<option value="${t.id}" ${reportForm.targetId === t.id ? 'selected' : ''}>${t.name}</option>`).join('')}
+        </select>
+        ${targetList.length === 0 ? `<div style="font-size:11px; color:var(--red); margin-top:4px;">No ${reportForm.type}s found in your network. Please add one first.</div>` : ''}
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-control" type="date" value="${reportForm.date}" onchange="reportForm.date=this.value" />
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Order Value Generated (₹)</label>
+        <input class="form-control" type="number" placeholder="0" value="${reportForm.orderValue}" oninput="reportForm.orderValue=this.value" />
+      </div>
+    </div>
+
+    <div class="form-card" style="margin-bottom:12px">
+      <div class="form-group" style="${reportForm.type === 'chemist' ? 'margin-bottom:0' : ''}">
+        <label class="form-label">Products Promoted</label>
+        <div class="chips-wrap" style="margin-top:10px">${productChips}</div>
+      </div>
+      ${samplesHtml}
+    </div>
+
+    <div class="form-card" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Competitor</label>
+        <select class="form-control" onchange="reportForm.competitor=this.value">
+          <option value="">— None —</option>
+          ${competitorOpts}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Competitor Activity</label>
+        <textarea class="form-control" placeholder="What did competitor do?" oninput="reportForm.competitorActivity=this.value">${reportForm.competitorActivity}</textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Other Inputs / Remarks</label>
+        <textarea class="form-control" placeholder="LBL left, remarks etc." oninput="reportForm.inputsGiven=this.value">${reportForm.inputsGiven}</textarea>
+      </div>
+    </div>
+
+    <div id="geo-bar-container" style="margin-bottom:12px">
+      ${buildGeoBarHtml()}
+    </div>
+
+    <button class="btn-primary" onclick="saveReport()">Submit Report</button>
+  </div>`;
+}
+
+function setReportType(type) {
+  reportForm.type = type;
+  reportForm.targetId = '';
+  reportForm.samples = []; // Reset samples when switching type
+  reRenderMain();
+}
+
+function toggleProduct(p) {
+  reportForm.products = reportForm.products.includes(p) ? reportForm.products.filter(x => x !== p) : [...reportForm.products, p];
+  reRenderMain();
+}
+
+function addSampleRow() { reportForm.samples.push({ product: '', qty: 1 }); reRenderMain(); }
+function updateSampleRow(idx, field, val) {
+  if(field === 'qty') reportForm.samples[idx].qty = parseInt(val) || 0;
+  else reportForm.samples[idx].product = val;
+}
+function removeSampleRow(idx) { reportForm.samples.splice(idx, 1); reRenderMain(); }
+
+function saveReport() {
+  const targetId = reportForm.targetId;
+  const orderValue = parseFloat(reportForm.orderValue) || 0;
+  
+  if (!targetId) { showToast('Please select a ' + reportForm.type, 'error'); return; }
+
+  const validSamples = reportForm.samples.filter(s => s.product && s.qty > 0);
+
+  const geoTag = geoState.status === 'success'
+    ? { lat: geoState.lat, lng: geoState.lng, accuracy: geoState.accuracy, timestamp: geoState.timestamp }
+    : null;
+
+  reports.push({
+    id: Date.now(),
+    type: reportForm.type,
+    targetId,
+    session: reportForm.session,
+    date: reportForm.date,
+    productsPromoted: [...reportForm.products],
+    samplesGiven: validSamples,
+    orderValue,
+    competitor: reportForm.competitor,
+    competitorActivity: reportForm.competitorActivity,
+    inputsGiven: reportForm.inputsGiven,
+    createdBy: currentUser.username,
+    geoTag
+  });
+  
+  reportForm = getInitialReportForm();
+  saveReports();
+  showToast('Call logged successfully!');
+  navigate('reports');
+}
+
+// ── SETTINGS & ADMIN TOOLS ────────────────────────────────────────────────
+function renderSettings() {
+  const adminTools = currentUser.role === 'admin' ? `
+    <div class="form-card" style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--slate-5);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px">Administration</div>
+      <button class="btn-icon teal" style="width:100%;justify-content:center;padding:12px;border-radius:10px;font-size:13px;margin-bottom:10px" onclick="navigate('manage-users')">
+        ${ico.userPlus} Manage Users
+      </button>
+      <button class="btn-icon teal" style="width:100%;justify-content:center;padding:12px;border-radius:10px;font-size:13px;" onclick="navigate('geo-audit')">
+        ${geoMapIcon()} Geo Location Audit
+      </button>
+    </div>
+  ` : '';
+
+  return `<div class="view">
+    <div class="section-hdr" style="margin-bottom:20px">
+      <span class="section-title">Settings</span>
+    </div>
+
+    ${adminTools}
+
+    <div class="form-card" style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--slate-5);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px">Export Data</div>
+      <div style="font-size:11px;color:var(--slate-5);margin-bottom:12px;">
+        ${currentUser.role === 'admin' ? 'Exports will include all team data.' : 'Exports will only include your personal data.'}
+      </div>
+      <button class="btn-icon teal" style="width:100%;justify-content:center;padding:12px;border-radius:10px;font-size:13px;margin-bottom:10px" onclick="exportDoctors()">
+        ${ico.download} Export Doctors List
+      </button>
+      <button class="btn-icon teal" style="width:100%;justify-content:center;padding:12px;border-radius:10px;font-size:13px;margin-bottom:10px" onclick="exportChemists()">
+        ${ico.download} Export Chemists List
+      </button>
+      <button class="btn-icon teal" style="width:100%;justify-content:center;padding:12px;border-radius:10px;font-size:13px" onclick="exportReports()">
+        ${ico.download} Export DCR Reports
+      </button>
+    </div>
+
+    <div class="form-card" style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--slate-5);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px">Account</div>
+      <div style="margin-bottom:12px; font-size:14px; font-weight:600; color:var(--slate-9);">
+        Logged in as: <span style="color:var(--teal)">${currentUser.username} (${currentUser.role})</span>
+      </div>
+      <button class="btn-icon slate" style="width:100%;justify-content:center;padding:12px;border-radius:10px;font-size:13px;color:var(--red);" onclick="logout()">
+        Sign Out
+      </button>
+    </div>
+
+    ${currentUser.role === 'admin' ? `
+    <div class="form-card" style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--slate-5);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px">Data Storage & Sync</div>
+      <div style="font-size:11px;color:var(--slate-5);margin-bottom:12px;line-height:1.6">
+        All data syncs to Google Drive in real time across all devices.<br>
+        Doctors: <strong>${doctors.length}</strong> &nbsp;|&nbsp; Chemists: <strong>${chemists.length}</strong> &nbsp;|&nbsp; Reports: <strong>${reports.length}</strong><br>
+        Last sync: <strong>${driveState.lastSync ? new Date(driveState.lastSync).toLocaleString('en-IN') : 'Not yet synced'}</strong>
+      </div>
+      <button class="btn-icon teal" style="width:100%;justify-content:center;padding:12px;border-radius:10px;font-size:13px;margin-bottom:10px" onclick="syncFromDrive(true)">
+        ↓ Pull Latest from Drive
+      </button>
+      <button class="btn-icon teal" style="width:100%;justify-content:center;padding:12px;border-radius:10px;font-size:13px;margin-bottom:10px" onclick="syncToDrive(true)">
+        ↑ Push Local Data to Drive
+      </button>
+      ${!driveState.authed ? `<button class="btn-icon teal" style="width:100%;justify-content:center;padding:12px;border-radius:10px;font-size:13px;margin-bottom:10px;background:var(--teal);color:#fff" onclick="initDriveAuth(true)">
+        🔗 Connect Google Drive
+      </button>` : ''}
+      <button class="btn-icon slate" style="width:100%;justify-content:center;padding:12px;border-radius:10px;font-size:13px;color:var(--red);" onclick="resetAllData()">
+        🗑 Reset All Data to Defaults
+      </button>
+    </div>` : `
+    <div class="form-card" style="margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:var(--slate-5);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px">Sync Status</div>
+      <div style="font-size:11px;color:var(--slate-5);line-height:1.6">
+        ${driveState.authed 
+          ? `✅ Connected to Google Drive. Your reports sync automatically after each submission.<br>Last sync: <strong>${driveState.lastSync ? new Date(driveState.lastSync).toLocaleString('en-IN') : 'Not yet'}</strong>`
+          : `⚠️ Not connected to Google Drive. Tap "Connect Drive" above to enable sync.`}
+      </div>
+      ${!driveState.authed ? `<button class="btn-icon teal" style="width:100%;justify-content:center;padding:12px;border-radius:10px;font-size:13px;margin-top:12px" onclick="initDriveAuth(true)">
+        🔗 Connect Google Drive
+      </button>` : ''}
+    </div>`}
+
+    <div class="form-card">
+      <div style="font-size:12px;font-weight:700;color:var(--slate-5);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px">About</div>
+      <div style="font-size:13px;color:var(--slate-7);line-height:1.7">
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--slate-1)">
+          <span style="font-weight:600">App Name</span><span>Kaner Healthcare MR</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--slate-1)">
+          <span style="font-weight:600">Version</span><span style="font-family:'DM Mono',monospace">2.0.0</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderManageUsers() {
+  if(currentUser.role !== 'admin') { navigate('dashboard'); return ''; }
+
+  const usersHtml = users.map(u => `
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--slate-1);">
+      <div>
+        <div style="font-weight:700; font-size:14px; color:var(--slate-9);">${u.username}</div>
+        <div style="font-size:11px; color:var(--slate-5); margin-top:2px;">Role: ${u.role.toUpperCase()}</div>
+      </div>
+      <button onclick="togglePwdReveal(this,'${u.password.replace(/'/g,"\\'")}')" style="font-family:'DM Mono',monospace; font-size:12px; background:var(--slate-1); padding:4px 8px; border-radius:6px; border:none; cursor:pointer; color:var(--slate-7);" data-revealed="false">
+        ••••••
+      </button>
+    </div>
+  `).join('');
+
+  return `<div class="view">
+    <div class="page-hdr">
+      <button class="back-btn" onclick="navigate('settings')">${ico.back}</button>
+      <h2 class="page-title">Manage Users</h2>
+    </div>
+
+    <div class="form-card" style="margin-bottom:12px;">
+      <div style="font-size:14px; font-weight:800; color:var(--slate-9); margin-bottom:16px;">Create New User</div>
+      
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-control" type="text" id="newUserUsername" placeholder="Enter username" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-control" type="text" id="newUserPassword" placeholder="Enter password" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-control" id="newUserRole">
+          <option value="mr">MR (Representative)</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="createNewUser()">Create User</button>
+    </div>
+
+    <div class="form-card">
+      <div style="font-size:14px; font-weight:800; color:var(--slate-9); margin-bottom:8px;">Registered Users</div>
+      ${usersHtml}
+    </div>
+  </div>`;
+}
+
+function createNewUser() {
+  const u = document.getElementById('newUserUsername').value.trim();
+  const p = document.getElementById('newUserPassword').value.trim();
+  const r = document.getElementById('newUserRole').value;
+
+  if(!u || !p) { showToast('Please enter username and password', 'error'); return; }
+  if(users.find(x => x.username.toLowerCase() === u.toLowerCase())) { showToast('Username already exists', 'error'); return; }
+
+  users.push({ id: Date.now(), username: u, password: p, role: r });
+  saveUsers();
+  showToast('User created successfully!');
+  reRenderMain();
+}
+
+function togglePwdReveal(btn, pwd) {
+  const revealed = btn.getAttribute('data-revealed') === 'true';
+  if(revealed) {
+    btn.textContent = '••••••';
+    btn.setAttribute('data-revealed', 'false');
+    btn.style.color = 'var(--slate-7)';
+  } else {
+    btn.textContent = pwd;
+    btn.setAttribute('data-revealed', 'true');
+    btn.style.color = 'var(--teal-dk)';
+    setTimeout(() => {
+      btn.textContent = '••••••';
+      btn.setAttribute('data-revealed', 'false');
+      btn.style.color = 'var(--slate-7)';
+    }, 5000);
+  }
+}
+
+function logout() {
+  currentUser = null;
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+  navigate('dashboard'); 
+}
+
+function resetAllData() {
+  if(currentUser.role !== 'admin') return;
+  if(!confirm('This will permanently delete ALL data and restore defaults on ALL devices. Are you sure?')) return;
+  users    = JSON.parse(JSON.stringify(DEFAULT_USERS));
+  doctors  = JSON.parse(JSON.stringify(DEFAULT_DOCTORS));
+  chemists = JSON.parse(JSON.stringify(DEFAULT_CHEMISTS));
+  reports  = JSON.parse(JSON.stringify(DEFAULT_REPORTS));
+  saveLocal();
+  syncToDrive(true);
+  showToast('All data reset to defaults.');
+  navigate('dashboard');
+}
+
+// ── GEO AUDIT (ADMIN ONLY) ────────────────────────────────────────────────
+function renderGeoAudit() {
+  if(currentUser.role !== 'admin') { navigate('dashboard'); return ''; }
+
+  const geoReports = [...reports]
+    .filter(r => r.geoTag)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const noGeoReports = reports.filter(r => !r.geoTag);
+
+  const cards = geoReports.length === 0
+    ? `<div class="empty-state">
+        <div class="empty-icon">${ico.pin}</div>
+        <p class="empty-text">No geo-tagged reports yet. Location is captured automatically when MRs submit new reports.</p>
+       </div>`
+    : geoReports.map(r => {
+        const isDoc = r.type === 'doctor';
+        const tgt = isDoc ? doctors.find(d => d.id === r.targetId) : chemists.find(c => c.id === r.targetId);
+        const g = r.geoTag;
+        const mapsUrl = `https://maps.google.com/?q=${g.lat},${g.lng}`;
+        const captureTime = g.timestamp ? new Date(g.timestamp).toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+
+        return `<div class="dcr-card" style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+            <div>
+              <span class="dcr-badge ${r.type}">${r.type}</span>
+              <div class="dcr-name" style="margin-top:6px">${tgt?.name || 'Unknown'}</div>
+              <div class="creator-badge" style="margin-top:4px">👤 ${r.createdBy} &nbsp;•&nbsp; ${r.date} ${r.session}</div>
+            </div>
+            <a href="${mapsUrl}" target="_blank" class="geo-map-link" style="padding:8px 12px;font-size:11px">
+              ${geoMapIcon()} Open Map
+            </a>
+          </div>
+          <div style="background:var(--slate-1);border-radius:var(--r-md);padding:10px 14px;font-size:12px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div>
+                <div style="font-size:10px;font-weight:700;color:var(--slate-5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Latitude</div>
+                <div style="font-family:'DM Mono',monospace;font-weight:600;color:var(--slate-9)">${Number(g.lat).toFixed(6)}</div>
+              </div>
+              <div>
+                <div style="font-size:10px;font-weight:700;color:var(--slate-5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Longitude</div>
+                <div style="font-family:'DM Mono',monospace;font-weight:600;color:var(--slate-9)">${Number(g.lng).toFixed(6)}</div>
+              </div>
+              <div>
+                <div style="font-size:10px;font-weight:700;color:var(--slate-5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Accuracy</div>
+                <div style="font-weight:600;color:var(--slate-9)">±${g.accuracy}m</div>
+              </div>
+              <div>
+                <div style="font-size:10px;font-weight:700;color:var(--slate-5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Captured At</div>
+                <div style="font-weight:600;color:var(--slate-9)">${captureTime}</div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+  const untaggedNote = noGeoReports.length > 0
+    ? `<div style="font-size:11px;color:var(--slate-5);text-align:center;margin-top:8px;padding:8px;background:var(--slate-1);border-radius:var(--r-md)">
+        ${noGeoReports.length} older report${noGeoReports.length > 1 ? 's have' : ' has'} no geo data (submitted before this feature was enabled).
+       </div>`
+    : '';
+
+  return `<div class="view">
+    <div class="page-hdr">
+      <button class="back-btn" onclick="navigate('settings')">${ico.back}</button>
+      <h2 class="page-title">Geo Location Audit</h2>
+    </div>
+
+    <div class="form-card" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:22px;font-weight:800;color:var(--teal)">${geoReports.length}</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--slate-5)">Geo-Tagged Reports</div>
+      </div>
+      <div>
+        <div style="font-size:22px;font-weight:800;color:var(--slate-5)">${noGeoReports.length}</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--slate-5)">Without Location</div>
+      </div>
+      <button class="btn-icon teal" onclick="exportGeoCSV()" style="padding:8px 14px;">${ico.download} Export</button>
+    </div>
+
+    ${cards}
+    ${untaggedNote}
+  </div>`;
+}
+
+function exportGeoCSV() {
+  if(currentUser.role !== 'admin') return;
+  const data = reports.filter(r => r.geoTag).map(r => {
+    const isDoc = r.type === 'doctor';
+    const tgt = isDoc ? doctors.find(d => d.id === r.targetId) : chemists.find(c => c.id === r.targetId);
+    const g = r.geoTag;
+    return {
+      Date: r.date,
+      Session: r.session,
+      Type: r.type.toUpperCase(),
+      Name: tgt?.name || '',
+      'Created By': r.createdBy,
+      Latitude: g.lat,
+      Longitude: g.lng,
+      'Accuracy (m)': g.accuracy,
+      'Captured At': g.timestamp,
+      'Google Maps URL': `https://maps.google.com/?q=${g.lat},${g.lng}`
+    };
+  });
+  exportCSV(data, 'Kaner_GeoAudit');
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────
+function exportCSV(data, filename) {
+  if (!data.length) { showToast('No data to export', 'error'); return; }
+  const headers = Object.keys(data[0]);
+  const rows = [headers.join(','), ...data.map(row =>
+    headers.map(h => `"${(row[h] ?? '').toString().replace(/"/g, '""')}"`).join(',')
+  )];
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${filename}_${today}.csv`;
+  a.click();
+  showToast('Export downloaded!');
+}
+
+function exportDoctors() { 
+  const docs = getVisibleDoctors().map(d => {
+    let out = { ID: d.id, Name: d.name, Degree: d.degree||'', Specialty: d.specialty, Area: d.area, Phone: d.phone };
+    if(currentUser.role === 'admin') out['Created By'] = d.createdBy;
+    return out;
+  });
+  exportCSV(docs, 'Kaner_Doctors'); 
+}
+
+function exportChemists() { 
+  const chems = getVisibleChemists().map(c => {
+    let attached = '';
+    if(c.attachedDoctorId) {
+      const doc = doctors.find(d => d.id == c.attachedDoctorId);
+      if(doc) attached = doc.name;
+    }
+    let out = { ID: c.id, Name: c.name, Contact: c.contactPerson, Attached_Doctor: attached, Area: c.area, Phone: c.phone };
+    if(currentUser.role === 'admin') out['Created By'] = c.createdBy;
+    return out;
+  });
+  exportCSV(chems, 'Kaner_Chemists'); 
+}
+
+function exportNetwork() {
+  if (networkSubTab === 'doctors') exportDoctors(); else exportChemists();
+}
+
+function exportReports() {
+  const data = [...getVisibleReports()].sort((a,b) => new Date(b.date)-new Date(a.date)).map(r => {
+    const isDoc = r.type === 'doctor';
+    const tgt = isDoc ? doctors.find(d => d.id === r.targetId) : chemists.find(c => c.id === r.targetId);
+    
+    let samplesStr = '';
+    if (r.samplesGiven && r.samplesGiven.length > 0) {
+      samplesStr = r.samplesGiven.map(s => `${s.product} (x${s.qty})`).join('; ');
+    }
+
+    let out = {
+      Date: r.date,
+      Session: r.session,
+      Type: r.type.toUpperCase(),
+      Name: tgt?.name || '',
+      'Specialty/Area': isDoc ? tgt?.specialty : tgt?.area,
+      'Products Pitched': (r.productsPromoted || []).join(', '),
+      'Samples Distributed': samplesStr,
+      'Order Value (INR)': r.orderValue || 0,
+      Competitor: r.competitor || '',
+      'Competitor Activity': r.competitorActivity || '',
+      'Inputs/Remarks': r.inputsGiven || ''
+    };
+    if(currentUser.role === 'admin') {
+      out['Created By'] = r.createdBy;
+      out['Geo Latitude']  = r.geoTag ? r.geoTag.lat : '';
+      out['Geo Longitude'] = r.geoTag ? r.geoTag.lng : '';
+      out['Geo Accuracy (m)'] = r.geoTag ? r.geoTag.accuracy : '';
+      out['Geo Timestamp'] = r.geoTag ? r.geoTag.timestamp : '';
+      out['Google Maps URL'] = r.geoTag ? `https://maps.google.com/?q=${r.geoTag.lat},${r.geoTag.lng}` : '';
+    }
+    return out;
+  });
+  exportCSV(data, 'Kaner_DCR_Reports');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type}`;
+  el.style.display = 'flex';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    navigate('dashboard');
+    waitForGapi(); // Start Google Drive connection
+  } catch(e) {
+    console.error("Failed to initialize app:", e);
+    document.getElementById('app').innerHTML = '<div style="padding:20px;text-align:center;color:red;">Error loading app. Please check browser console.</div>';
+  }
+});
+</script>
+</body>
+</html>
